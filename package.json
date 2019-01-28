@@ -1,6 +1,6 @@
 {
   "name": "homebridge-mydenon",
-  "version": "0.0.4",
+  "version": "0.0.10",
   "description": "myDenon Zone Control",
   "license": "ISC",
   "keywords": [
@@ -8,10 +8,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/example/homebridge.git"
+    "url": "git://github.com/stackunderflow/mydenon.git" 
   },
   "bugs": {
-    "url": "http://github.com/example/homebridge/issues"
+    "url": "http://github.com/stackunderflow/mydenon/issues"
   },
   "engines": {
     "node": ">=0.12.0",
