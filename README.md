@@ -1,2 +1,2 @@
 # mydenon
-experimental homebridge plugin for denon
+experimental homebridge plugin for denon AVRs

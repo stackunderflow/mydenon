@@ -2,7 +2,7 @@
 //  myDenon.c
 //  
 //
-//  Created by Mark J. McArdle on 26/01/2019.
+//  Created by stackunderflow on 26/01/2019.
 */
 
 var net = require("net");
