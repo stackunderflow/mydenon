@@ -1,234 +1,115 @@
-/*
-//  myDenon.c
-//  
-//
-//  Created by stackunderflow on 26/01/2019.
-*/
+const request = require('request')
+const xml2js = require('xml2js')
+let Service, Characteristic
 
-var net = require("net");
-var Accessory, Service, Characteristic, UUIDGen;
+module.exports = function(homebridge) {
+  Characteristic = homebridge.hap.Characteristic
+  Service = homebridge.hap.Service
 
-module.exports = function (homebridge) {
-
-    console.log("homebridge API version: " + homebridge.version);
-    
-    // Accessory must be created from PlatformAccessory Constructor
-    Accessory = homebridge.platformAccessory;
-    
-    // Service and Characteristic are from hap-nodejs
-    Service = homebridge.hap.Service;
-    Characteristic = homebridge.hap.Characteristic;
-    UUIDGen = homebridge.hap.uuid;
-    
-    homebridge.registerAccessory("speaker-plugin", "MyDenonSpeaker", myDenon);
+  homebridge.registerAccessory('homebridge-denon-quickselect', 'denon-quickselect', DenonQuickselect)
 }
 
-// myDenon
-function myDenon(log, config, api) {
+function DenonQuickselect(log, config) {
+    this.log = log
+    this.name = config.name
+    this.host = config.host
+    this.quickselect = config.quickselect || 1
+    this.zone = (config.zone || 1) | 0
+    this.pingUrl = config.pingUrl
+    this.matchSource = config.matchSource
 
-    this.log = log;
-    this.name = config['name'];
-    this.ip = config['ip'];
-    this.zone = config['zone'];
-    this.input = config['input'];
-    
-    this.log("about to check api");
-    
-    if (api) {
-
-        this.log("api is non-null");
-
-        // Save the API object as plugin needs to register new accessory via this object
-        this.api = api;
-
-        // Listen to event "didFinishLaunching", this means homebridge already finished loading cached accessories.
-        // Platform Plugin should only register new accessory that doesn't exist in homebridge after this event.
-        // Or start discover new accessories.
-        this.api.on('didFinishLaunching', function() {
-          this.log("Did finish launching");
-        
-       })
+    if (this.zone < 1 && this.zone > 2) {
+        this.log.warn('Zone number is not recognized (must be 1 or 2) - assuming zone 1')
+        this.zone = 1
     }
+
+    this.zoneName = this.zone === 1 ? 'Main' : 'Zone2'
 }
 
-myDenon.prototype = {
-		
-	// configureAccessory
-	configureAccessory: function (callback) {
-		this.log("configureAccessory called!");	
-	},
-	
-	// identify
-	identify: function (callback) {
-	
-		this.log("Identify requested!");
-		callback(); // success
-	},
-	
-	// GET SpeakerOnCharacteristic
-	getSpeakerOnCharacteristic:  function (callback) {
-	       
-		this.log('getSpeakerOnCharacteristic');
-	
-		const me = this;                                                      
-	                                                                              
-	    var client = new net.Socket();                                        
-	    client.connect(23, this.ip, function() {                              
-	        this.log('Sending Z2?\n');                                     
-	        client.write('Z2?\n');                                            
-	    });                                                                   
-	                                                                          
-	                                                                          
-	    client.on('data', function(data) {                                    
-	        this.log('Received: ' + data);                                 
-	        client.destroy(); // kill client after server's response          
-	    });                                                                   
-	                                                                          
-	    client.on('close', function() {                                       
-	        this.log('Connection closed');                                 
-	    });                                                                   
-	                                                                          
-	    callback(null);            
-	},
-	
-	// SET SpeakerON                                                          
-	setSpeakerOnCharacteristic:  function (state, callback) {                         
-	
-	    this.log('setSpeakerOnCharacteristic');                             
-	
-	    const me = this;                                                      
-	                                                                          
-	    // turn on specific zone                                              
-	    var client = new net.Socket();                                        
-	    client.connect(23, this.ip, function() {                              
-	        this.log('on = ' + state);                                        
-	        this.log('Sending Z2ON\n');                                    
-	                                                                          
-	        client.write('Z2ON\n');                                           
-	        client.write('Z2NET\n');                                          
-	    });                                                                   
-	                                                                          
-	    client.on('close', function() {                                       
-	        this.log('Connection closed');                                 
-	    });                            
-		
-		callback(null);                                       
-	                                                                              
-	},                                                   
-	                                                                              
-	// GET SpeakerVolume                                                      
-	getSpeakerVolumeCharacteristic:  function (callback) {                         
-	
-	    this.log('getSpeakerVolumeCharacteristic');                             
-	    const me = this;                                                      
-	                                                                                
-		callback(null);                                                               
-	},                                                              
-	                                                                    
-	// SET SpeakerVolume                                            
-	setSpeakerVolumeCharacteristic: function (state, callback) {           
-	        
-		this.log('setSpeakerVolumeCharacteristic');                             
-	
-		const me = this;                                            
-	                                                                    
-	    // turn on specific zone                                    
-	    var client = new net.Socket();                              
-	    client.connect(23, this.ip, function() {                    
-	        this.log('on = ' + state);                              
-	        this.log('Sending Z2ON\n');                          
-	                                                                
-	        client.write('Z2ON\n');                                 
-	        client.write('Z2NET\n');                                
-	    });                                                         
-	                                                                
-	    client.on('close', function() {                             
-	        this.log('Connection closed');                       
-	    });                                                         
-	 	callback(null);                                                               
-	},                                
-	
-	// GET SpeakerMute                                                        
-	getSpeakerMuteCharacteristic: function (callback) {                           
-	
-	    this.log('getSpeakerMuteCharacteristic');                             
-	    const me = this;                                                   
-	                                                                       
-	    var client = new net.Socket();                                         
-	    client.connect(23, this.ip, function() {                               
-	        this.log('Sending Z2MU?\n');                                
-	        client.write('Z2MU?\n');                                       
-	    });                                                                
-	                                                                       
-	                                                                       
-	    client.on('data', function(data) {                                     
-	        this.log('Received: ' + data);                                  
-	        client.destroy(); // kill client after server's response           
-	    });                                                                    
-	                                                                           
-	    client.on('close', function() {                                        
-	        this.log('Connection closed');                                  
-	    });                                                                    
-	    callback(null);                                                                       
-	},                                                                         
-	                                                                               
-	// SET SpeakerMute                                                         
-	setSpeakerMuteCharacteristic: function (state, callback) {                        
-	
-	    this.log('setSpeakerMuteCharacteristic');                             
-	    const me = this;                                                       
-	                                                                           
-	    // turn on specific zone                                               
-	    var client = new net.Socket();                                         
-	    client.connect(23, this.ip, function() {                               
-	        this.log('on = ' + state);                                         
-	        this.log('Sending Z2MUON\n');                                   
-	                                                                           
-	        client.write('Z2MUON\n');                                          
-	    });                                                                    
-	                                                                           
-	    client.on('close', function() {                                        
-	        this.log('Connection closed');                                  
-	    });                                                                    
-	 	callback(null);                                                                          
-	},                               
-	
-	// getServices
-	getServices: function() {                                   
-	
-	    speakerService = new Service.Speaker(this.name);                       
-	                                                                           
-	    speakerService.getCharacteristic(Characteristic.Mute)                  
-	    .on('get', this.getSpeakerMuteCharacteristic.bind(this))               
-	    .on('set', this.setSpeakerMuteCharacteristic.bind(this));              
-	                                                                           
-	                                                                           
-	    this.log("add Characteristic Volume...");                              
-	    speakerService.addCharacteristic(new Characteristic.Volume())          
-	    .on('get', this.getSpeakerVolumeCharacteristic.bind(this))             
-	    .on('set', this.setSpeakerVolumeCharacteristic.bind(this));            
-	                                                                           
-	    this.log("add Characteristic On...");                                  
-	    speakerService.addCharacteristic(new Characteristic.On())              
-	    .on('get', this.getSpeakerOnCharacteristic.bind(this))                 
-	    .on('set', this.setSpeakerOnCharacteristic.bind(this));                
-	  
-		const informationService = new Service.AccessoryInformation();
-	
-	    informationService
-	    .setCharacteristic(Characteristic.Manufacturer, "Denon")
-	    .setCharacteristic(Characteristic.Model, "AVR Speaker")
-	    .setCharacteristic(Characteristic.SerialNumber, "SP01")
-	    .setCharacteristic(Characteristic.FirmwareRevision, "1.0");                                                                             
-	  
-	  	this.speakerService = speakerService;                                  
-	  	this.informationService = informationService
-	
-	    this.log('getServices');  
-	  	
-	    return [informationService, speakerService];                                               
-	},  
-};
-   
+DenonQuickselect.prototype.buildXml = function(obj) {
+  var builder = new xml2js.Builder({ rootName: 'tx', attrkey: 'attr', charkey: 'val' })
+  return builder.buildObject(obj)
+}
 
+DenonQuickselect.prototype.doRequest = function(data) {
+  const url = 'http://' + this.host + ':8080' + '/goform/AppCommand.xml'
+  
+  this.log("url: " + url);
+  this.log("datea: " + data);
+  
+  return new Promise((resolve, reject) => {
+    request.post({url : url, body: data}, (error, response, body) => {
+      if(error || response.statusCode !== 200) {
+    	  this.log("post failed: " + error + " " + response.statusCode);
+          return reject(error)
+      }
 
+      xml2js.parseString('' + body, function (err, result) {
+        if(err) reject(error)
+        else    resolve(result)
+      })
+    })
+  })
+}
+
+DenonQuickselect.prototype.getState = function(callback) {
+  
+  this.log("getState");
+  
+  const xml = this.buildXml({
+    cmd: [
+      { attr: { id: '1' }, val: 'GetAllZonePowerStatus' },
+      { attr: { id: '2' }, val: 'GetAllZoneSource' }
+    ]
+  })
+  
+  this.doRequest(xml).then(resp => {
+    const power = resp.rx.cmd[0].zone1[0] === 'ON'
+    const source = resp.rx.cmd[1].zone1[0].source[0] === this.matchSource
+    
+    callback(null, (power && source) ? 1 : 0)
+  })
+  .catch(e => { this.log.warn(e) })
+}
+
+DenonQuickselect.prototype.setQuickSelect = function(value, callback) {
+  
+  this.log("setQuickSelect");
+
+  if(this.pingUrl) {
+    request.get(this.pingUrl, (error, response, body) => {
+      this.log(`pinged ${this.pingUrl} - got: ${error} and ${response.statusCode}}`)
+    })
+  }
+  
+  const xml = this.buildXml({
+    cmd: { attr: { id: '1' }, val: 'SetQuickSelect' },
+    zone: this.zoneName,
+    value: this.quickselect
+  })
+
+  this.doRequest(xml).then(resp => {
+    this.log('switch to ', this.quickselect, this.zoneName, JSON.stringify(resp.rx))
+    callback()
+  })
+  .catch(e => { this.log.warn(e) })
+}
+
+DenonQuickselect.prototype.getServices = function() {
+
+  this.log("getServices");
+
+  var informationService = new Service.AccessoryInformation()
+  informationService
+    .setCharacteristic(Characteristic.Manufacturer, 'Denon')
+    .setCharacteristic(Characteristic.Model, 'Quickselect')
+    .setCharacteristic(Characteristic.SerialNumber, 'QS ' + this.quickselect)
+
+  var switchService = new Service.Switch(this.name)
+  switchService
+    .getCharacteristic(Characteristic.On)
+    .on('get', this.getState.bind(this))
+    .on('set', this.setQuickSelect.bind(this))
+
+  return [informationService, switchService]
+}

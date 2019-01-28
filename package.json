@@ -1,21 +1,28 @@
 {
-  "name": "homebridge-mydenon",
-  "version": "0.0.10",
-  "description": "myDenon Zone Control",
-  "license": "ISC",
+  "name": "homebridge-denon-quickselect",
+  "version": "0.3.0",
+  "description": "homebridge plugin to control QuickSelect on denon receivers",
+  "license": "MIT",
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "denon",
+    "volume",
+    "siri",
+    "quickselect"
   ],
+  "engines": {
+    "node": ">=6.0.0",
+    "homebridge": ">=0.4.0"
+  },
+  "author": {
+    "name": "Max Stockner <mail@bluemaex.de>"
+  },
   "repository": {
     "type": "git",
-    "url": "git://github.com/stackunderflow/mydenon.git" 
+    "url": "git://github.com/bluemaex/homebridge-denon-quickselect.git"
   },
-  "bugs": {
-    "url": "http://github.com/stackunderflow/mydenon/issues"
-  },
-  "engines": {
-    "node": ">=0.12.0",
-    "homebridge": ">=0.2.0"
-  },
-  "dependencies": {}
+  "dependencies": {
+    "request": "^2.69.0",
+    "xml2js": "^0.4.x"
+  }
 }
